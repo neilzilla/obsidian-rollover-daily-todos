@@ -95,6 +95,20 @@ export default class RolloverSettingTab extends PluginSettingTab {
       );
 
     new Setting(this.containerEl)
+      .setName("Move Reminders to the latest note")
+      .setDesc(
+        `If the Reminder Todo Plugin is enabled, this will move the reminder to the latest instance of the todo, avoiding duplicate reminders.`
+      )
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.moveReminder || false)
+          .onChange((value) => {
+            this.plugin.settings.moveReminder = value;
+            this.plugin.saveSettings();
+          })
+      );
+
+    new Setting(this.containerEl)
       .setName("Automatic rollover on daily note open")
       .setDesc(
         `If enabled, the plugin will automatically rollover todos when you open a daily note.`

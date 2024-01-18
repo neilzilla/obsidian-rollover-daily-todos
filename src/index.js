@@ -46,6 +46,7 @@ export default class RolloverTodosPlugin extends Plugin {
       removeEmptyTodos: false,
       rolloverChildren: false,
       rolloverOnFileCreate: true,
+      moveReminder: false
     };
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
   }
@@ -123,6 +124,8 @@ export default class RolloverTodosPlugin extends Plugin {
     const dn = await this.app.vault.read(file);
     const dnLines = dn.split(/\r?\n|\r|\n/g);
 
+    console.log('dnLines', dnLines)
+
     return getTodos({
       lines: dnLines,
       withChildren: this.settings.rolloverChildren,
@@ -182,11 +185,14 @@ export default class RolloverTodosPlugin extends Plugin {
     if (filePathConstructed !== file.path) return;
 
     // was just created
-    if (
-      today.getTime() - file.stat.ctime > MAX_TIME_SINCE_CREATION &&
-      !ignoreCreationTime
-    )
-      return;
+    // TODO reenable this shit
+    // if (
+    //   today.getTime() - file.stat.ctime > MAX_TIME_SINCE_CREATION &&
+    //   !ignoreCreationTime
+    // )
+    //   return console.log('just created');
+
+      console.log('eh eh')
 
     /*** Next, if it is a valid daily note, but we don't have daily notes enabled, we must alert the user ***/
     if (!this.isDailyNotesEnabled()) {
@@ -195,7 +201,7 @@ export default class RolloverTodosPlugin extends Plugin {
         10000
       );
     } else {
-      const { templateHeading, deleteOnComplete, removeEmptyTodos } =
+      const { templateHeading, deleteOnComplete, removeEmptyTodos, moveReminder } =
         this.settings;
 
       // check if there is a daily note from yesterday
@@ -301,6 +307,35 @@ export default class RolloverTodosPlugin extends Plugin {
         await this.app.vault.modify(lastDailyNote, modifiedContent);
       }
 
+      // delete dates for reminder
+      if (moveReminder) {
+        let lastDailyNoteContent = await this.app.vault.read(lastDailyNote);
+
+
+        // TODO maybe add this back in? not sure it is needed as it's just dates
+
+        // undoHistoryInstance.previousDay = {
+        //   file: lastDailyNote,
+        //   oldContent: `${lastDailyNoteContent}`,
+        // };
+
+        let lines = lastDailyNoteContent.split("\n");
+
+        console.log('delete on complete', deleteOnComplete)
+        console.log('yesterdoos', todos_yesterday)
+
+        // TODO make this look for a possible space at beginning
+        const date_reg = /\(@[0-9]{4}-[0-9]{2}-[0-9]{2}\)/g
+        for (let i = lines.length; i >= 0; i--) {
+          if (todos_yesterday.includes(lines[i])) {
+            if(lines[i].match(date_reg)) lines[i] = lines[i].replace(date_reg, '')
+          }
+        }
+
+        const modifiedContent = lines.join("\n");
+        await this.app.vault.modify(lastDailyNote, modifiedContent);
+      }
+
       // Let user know rollover has been successful with X todos
       const todosAddedString =
         todosAdded == 0
@@ -351,8 +386,9 @@ export default class RolloverTodosPlugin extends Plugin {
 
     this.registerEvent(
       this.app.vault.on("create", async (file) => {
+        console.log('hairy bollocks arse')
         // Check if automatic daily note creation is enabled
-        if (!this.settings.rolloverOnFileCreate) return;
+        if (!this.settings.rolloverOnFileCreate) return console.log('cockwomble');
         this.rollover(file);
       })
     );
