@@ -185,12 +185,11 @@ export default class RolloverTodosPlugin extends Plugin {
     if (filePathConstructed !== file.path) return;
 
     // was just created
-    // TODO reenable this shit
-    // if (
-    //   today.getTime() - file.stat.ctime > MAX_TIME_SINCE_CREATION &&
-    //   !ignoreCreationTime
-    // )
-    //   return console.log('just created');
+    if (
+      today.getTime() - file.stat.ctime > MAX_TIME_SINCE_CREATION &&
+      !ignoreCreationTime
+    )
+      return console.log('just created');
 
       console.log('eh eh')
 
